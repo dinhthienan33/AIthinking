@@ -1,0 +1,21 @@
+Chatbot hỏi đáp về các môn chính trị được dạy tại UIT
+- Input: 1 câu hỏi trắc nghiệm dưới dạng single choice về các môn chính trị kèm các đáp án để lựa chọn.
+- Output: Câu trả lời duy nhất đúng từ các đáp án đã được cung cấp kèm theo lời giải thích được trích từ trong giáo trình.
+-Constraint: 
+Ngôn ngữ: tiếng Việt.
+Phạm vi thông tin: chatbot chỉ được hỏi và trả lời xoay quanh nội dung các môn chính trị được dạy tại UIT.
+Độ dài câu hỏi từ người dùng: tối thiểu 1 ký tự, tối đa 1000 ký tự.
+Database: Giáo trình các môn chính trị được dạy tại UIT.
+-Requirements:
+Lấy bộ câu hỏi (1000 câu) được lấy từ các trang bài tập trắc nghiệm để đánh giá.Sau khi đặt câu hỏi và lấy câu trả lời đầu tiên trên câu hỏi đó thì độ chính xác phải >90%.
+Thời gian từ lúc người dùng submit tới khi toàn bộ câu trả lời hiển thị là <5s.
+Độ dài từ câu trả lời của chatbot phải trên 1 ký tự và dưới 1000 ký tự
+Câu trả lời từ chatbot phải là tiếng việt và liên quan đến các môn chính trị được dạy tại UIT.
+Thiết bị chạy chương trình phải đáp ứng đủ hoặc hơn cấu hình dưới đây:
+CPU: Intel Core i3 (hoặc AMD Ryzen 3)
+RAM: 8GB DDR4
+Ổ cứng: 256GB HDD hoặc hơn
+Màn hình: 21.5-inch Full HD (1920x1080)
+Bàn phím: Bàn phím cơ hoặc thường
+Chuột: Chuột quang hoặc không dây
+Hệ điều hành: Windows 10/11 Home
