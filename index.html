@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot UI</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .chatbot-container {
+            width: 100%;
+            max-width: 500px;
+            height: 600px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .chat-message.user {
+            background-color: #4CAF50;
+            color: white;
+            align-self: flex-end;
+        }
+        .chat-message.bot {
+            background-color: #e7f3ff;
+            align-self: flex-start;
+        }
+        .chat-input {
+            display: flex;
+            border-top: 1px solid #ddd;
+            padding: 10px;
+            background-color: #fff;
+        }
+        .chat-input textarea {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+            font-size: 16px;
+            height: 50px;
+            resize: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .chat-input textarea:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+        .chat-input button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            margin-left: 10px;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .chat-input button:hover {
+            background-color: #45a049;
+        }
+        .file-upload {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        .file-upload label {
+            margin-right: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+        .file-upload input {
+            display: none;
+        }
+        .file-upload button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .file-upload button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chatbot-container">
+    <div class="chat-header">Chatbot</div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="file-upload">
+        <label for="fileInput">Import File (Optional):</label>
+        <input type="file" id="fileInput" accept=".txt,.pdf,.docx">
+        <button onclick="handleFileUpload()">Upload</button>
+    </div>
+    <div class="chat-input">
+        <textarea id="userInput" placeholder="Type your message here..."></textarea>
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+    const chatMessages = document.getElementById('chatMessages');
+    let fileContent = null;
+
+    function addMessage(content, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('chat-message', sender);
+        messageDiv.textContent = content;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const userInput = document.getElementById('userInput');
+        const message = userInput.value.trim();
+        if (message) {
+            addMessage(message, 'user');
+            userInput.value = '';
+
+            try {
+                const response = await fetch('http://localhost:8000/answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: message, use_external_knowledge: true })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addMessage(data.answer, 'bot');
+                } else {
+                    const errorData = await response.json();
+                    addMessage(`Error: ${errorData.detail}`, 'bot');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('An error occurred while fetching the response.', 'bot');
+            }
+        }
+    }
+
+    function handleFileUpload() {
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput.files.length > 0) {
+            fileContent = fileInput.files[0];
+            addMessage(`File "${fileContent.name}" uploaded successfully.`, 'bot');
+        } else {
+            addMessage('No file selected.', 'bot');
+        }
+    }
+</script>
+
+</body>
+</html>
