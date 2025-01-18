@@ -1,0 +1,25 @@
+basic query : 
+    Mâu thuẫn cơ bản trong xã hội tư bản chủ nghĩa dẫn đến điều gì?
+    A. Khủng hoảng kinh tế chu kỳ
+    B. Tăng trưởng kinh tế không bền vững
+    C. Thất nghiệp gia tăng
+    D. Đấu tranh giai cấp không ngừng
+    Đáp án: D
+
+query with external knowledge:
+    Liên hệ thực tiễn môn chủ nghĩa xã hội khoa học có mấy ý chính?
+    A. 3 ý
+    B. 5 ý
+    C. 10 ý
+    D. 2 ý
+    Đáp án : B
+    
+    Xây dụng kiến trúc 1-layer RNN theo hình mấy ?
+    A. Hình 1
+    B. Hình 2
+    C. Hình 3
+    D. Hình 4
+
+    Đáp án đúng: A
+
+    

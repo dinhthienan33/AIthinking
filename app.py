@@ -1,6 +1,7 @@
 import os
 import time
 import io
+import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from fastapi import FastAPI, File, UploadFile, HTTPException
@@ -15,7 +16,8 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain_google_genai import ChatGoogleGenerativeAI
 from PyPDF2 import PdfReader
-
+from rank_bm25 import BM25Okapi
+import numpy as np
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -76,7 +78,7 @@ def load_pdfs_with_metadata(uploaded_files, doc_type="generic"):
 
     return text_chunks, metadata
 
-def retrieval_result(query, path, top_k=3):
+def retrieval_result(query, path, top_k=5):
     """
     Retrieve relevant documents from the FAISS vector store.
     """
@@ -97,7 +99,7 @@ def answer_query(query, context):
     Answer a query using a language model with the given context.
     """
     try:
-        api_key = os.environ("GOOGLE_API_KEY")  # Replace "default-key" with actual default or raise error
+        api_key = os.getenv("GOOGLE_API_KEY",default="AIzaSyBfdagFw6mZF02sgemJzCI2OoXikNERnTc")  # Replace "default-key" with actual default or raise error
         llm = ChatGoogleGenerativeAI(
             model="gemini-1.5-pro",
             temperature=0,
@@ -107,8 +109,9 @@ def answer_query(query, context):
         prompt_template = PromptTemplate(
             input_variables=["context", "query"],
             template=(
-                "Bạn là một giảng viên môn kinh tế chính trị tại Việt Nam. Dựa vào thông tin sau để trả lời câu hỏi của sinh viên:\n\n"
-                "Chỉ cần đưa ra nguyên văn câu trả lời đúng, không trả lời gì thêm.\n\n"
+                "Bạn là một giảng viên các môn chính trị, triết học tại Việt Nam. Dựa vào thông tin sau để trả lời câu hỏi của sinh viên:\n\n"
+                "Chỉ cần đưa ra nguyên văn câu trả lời đúng, không trả lời gì thêm.Trả lời bằng tiếng Việt.\n\n"
+                "Nếu học viên hỏi những câu không liên quan đến các môn chính trị, hãy trả lời 'Tôi chỉ trả lời câu hỏi lien quan đến các môn chính trị được dạy tại UIT.'\n\n"
                 "Context:\n{context}\n\n"
                 "Question:\n{query}\n\n"
                 "Answer:"
@@ -121,6 +124,30 @@ def answer_query(query, context):
     except Exception as e:
         logger.error(f"Error during query answering: {e}")
         return "Error generating answer."
+
+def rerank_with_bm25(query, contexts, top_k=3):
+    """
+    Rerank contexts using BM25 scoring
+    """
+    # Split contexts into sentences/passages
+    contexts = [c.strip() for c in contexts.split('\n\n') if c.strip()]
+    
+    # Tokenize contexts
+    tokenized_contexts = [doc.lower().split() for doc in contexts]
+    
+    # Create BM25 model
+    bm25 = BM25Okapi(tokenized_contexts)
+    
+    # Get BM25 scores
+    tokenized_query = query.lower().split()
+    doc_scores = bm25.get_scores(tokenized_query)
+    
+    # Get top-k indices
+    top_indices = np.argsort(doc_scores)[-top_k:][::-1]
+    
+    # Return reranked contexts
+    reranked_contexts = [contexts[i] for i in top_indices]
+    return '\n\n'.join(reranked_contexts)
 
 # Initialize FastAPI
 app = FastAPI()
@@ -155,6 +182,7 @@ async def upload_file(file: UploadFile = File(...)):
         store.save_local('./external_knowledge')
         pdf_file.close()
         return {"message": "File uploaded and processed successfully"}
+    
     except Exception as e:
         logger.error(f"Error during file upload: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -166,9 +194,11 @@ async def get_answer(request: QuestionRequest):
         context = retrieval_result(request.query, './vectorstore')
         if request.use_external_knowledge:
             external_context = retrieval_result(request.query, './external_knowledge')
-            context = context + "\n\n" + external_context
-
-        answer = answer_query(request.query, context)
+            all_context = context + "\n\n" + external_context
+            reranked_context = rerank_with_bm25(request.query, all_context)
+            answer = answer_query(request.query, reranked_context)
+        else :
+            answer = answer_query(request.query, context)
         inference_time = time.time() - start_time
         return AnswerResponse(answer=answer, inference_time=inference_time)
     except Exception as e:

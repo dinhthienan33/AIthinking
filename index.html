@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot UI</title>
+    <title>Political ChatbotUIT</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -127,7 +127,7 @@
 <body>
 
 <div class="chatbot-container">
-    <div class="chat-header">Chatbot</div>
+    <div class="chat-header">Political Chatbot UIT</div>
     <div class="chat-messages" id="chatMessages"></div>
     <div class="file-upload">
         <label for="fileInput">Import File (Optional):</label>
@@ -171,6 +171,7 @@
                 if (response.ok) {
                     const data = await response.json();
                     addMessage(data.answer, 'bot');
+                    addMessage(data.inference_time, 'bot');
                 } else {
                     const errorData = await response.json();
                     addMessage(`Error: ${errorData.detail}`, 'bot');
@@ -182,11 +183,40 @@
         }
     }
 
-    function handleFileUpload() {
+    async function handleFileUpload() {
         const fileInput = document.getElementById('fileInput');
+        
         if (fileInput.files.length > 0) {
-            fileContent = fileInput.files[0];
-            addMessage(`File "${fileContent.name}" uploaded successfully.`, 'bot');
+            const file = fileInput.files[0];
+            
+            try {
+                // Add upload message
+                addMessage('📤 Starting upload process...', 'bot');
+                const formData = new FormData();
+                formData.append('file', file);
+    
+                // Upload file
+                const response = await fetch('http://localhost:8000/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+    
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+    
+                // Show processing message
+                addMessage('⏳ Processing file... This may take up to 30 seconds', 'bot');
+                
+                const data = await response.json();
+                
+                // Keep all status messages visible
+                addMessage('✅ Upload complete!', 'bot');
+            } catch (error) {
+                addMessage('❌ Upload failed!', 'bot');
+                addMessage(`Error: ${error.message}`, 'bot');
+                console.error('Error:', error);
+            }
         } else {
             addMessage('No file selected.', 'bot');
         }
