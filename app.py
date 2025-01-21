@@ -99,7 +99,7 @@ def answer_query(query, context):
     Answer a query using a language model with the given context.
     """
     try:
-        api_key = os.getenv("GOOGLE_API_KEY",default="AIzaSyBfdagFw6mZF02sgemJzCI2OoXikNERnTc")  # Replace "default-key" with actual default or raise error
+        api_key = os.getenv("GOOGLE_API_KEY")  # Replace "default-key" with actual default or raise error
         llm = ChatGoogleGenerativeAI(
             model="gemini-1.5-pro",
             temperature=0,
