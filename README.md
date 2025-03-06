@@ -2,6 +2,7 @@
 
 ## Overview
 An AI-powered chatbot designed to answer questions about political and philosophical subjects in Vietnamese education. It is built with a FastAPI backend and a vanilla JavaScript frontend.
+![Homepage](assets/homepage.png)
 
 ## Features
 
